@@ -21,7 +21,8 @@ def acLogin(request):
         print(type(send_data), send_data)
         response=requests.post("http://127.0.0.1:5000/login", json=send_data).json()
         print(type(response), response)
-        return render(request,"cafeManagement/list.html",{"response":response})
+        request.session["user"]=response
+        return render(request,"cafeManagement/list.html",context={"response":response,"session":request.session["user"]})
     else:
         return render(request,"cafeManagement/login.html")
    
