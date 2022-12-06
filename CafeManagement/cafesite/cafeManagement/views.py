@@ -60,3 +60,7 @@ def acDelete(request):
 def acList(request):
     response=requests.get("http://127.0.0.1:5000/user").json()
     return render(request,"cafeManagement/list.html",{"response":response})
+
+
+def achome(request):
+    return render(request,"cafeManagement/home.html")

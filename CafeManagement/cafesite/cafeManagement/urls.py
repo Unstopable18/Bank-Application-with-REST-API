@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path('', views.acIndex),
+    path('home/', views.achome),
     path('list/', views.acList),
     path('form/', views.acForm),
     path('delete/', views.acDelete),
