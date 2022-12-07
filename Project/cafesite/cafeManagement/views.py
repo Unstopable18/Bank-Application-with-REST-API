@@ -10,26 +10,32 @@ def acIndex(request):
     return render(request,"cafeManagement/base.html")
 
 def acLogout(request):
-    return render(request,"/account/login")
+    del request.session["access_token"]
+    del request.session["username"]
+    #need to add token to blocklist
+    return render(request,"cafeManagement/login.html")
 
 def acLogin(request):
     if request.method=="POST":
         print(type(request), request)
         user=request.POST["username"]
         pasword=request.POST["password"]
-        send_data=dict(username=user, password=pasword)
+        send_data=dict(acno=user, password=pasword)
         print(type(send_data), send_data)
         response=requests.post("http://127.0.0.1:5000/login", json=send_data).json()
         print(type(response), response)
-        request.session["user"]=response
-        return render(request,"cafeManagement/list.html",context={"response":response,"session":request.session["user"]})
+        if "access_token" in response:
+            request.session["access_token"]=response["access_token"]
+            request.session["username"]=response["username"]
+            return render(request,"cafeManagement/home.html", context={"response":response,"session":request.session["user"]})
+        else:
+            return render(request,"cafeManagement/login.html")
     else:
         return render(request,"cafeManagement/login.html")
    
 
 def acForm(request):
     if request.method=="POST":
-
         form = AccountForm(request.POST)
         if form.is_valid():
             name=request.POST["name"]
@@ -63,4 +69,5 @@ def acList(request):
 
 
 def achome(request):
+    token=request.session["user"]
     return render(request,"cafeManagement/home.html")
