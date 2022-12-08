@@ -4,16 +4,41 @@ from .models import Account
 import requests
 import json
 
-global token
-
 def acIndex(request):
     return render(request,"cafeManagement/base.html")
 
 def acLogout(request):
-    del request.session["access_token"]
-    del request.session["username"]
-    #need to add token to blocklist
-    return render(request,"cafeManagement/login.html")
+    if 'access_token' in request.session:
+        auth="Bearer "+str(request.session["access_token"])
+        print(type(auth), auth)
+        response=requests.post("http://127.0.0.1:5000/logout",headers={"Authorization":auth}).json()
+        print("Response from logout",type(response), response)
+        if "msg" in response:
+            if response["msg"]=="Signature verification failed":
+                print("Invalid Signature !!!!!!!")
+                return redirect("../login")
+            elif response["msg"]=="Missing Authorization Header":
+                print('Authorization missing!')
+                response["access_token"]=request.session["access_token"]
+                response["acno"]=request.session["acno"]
+                return render(request,"cafeManagement/home.html", context={"response":response})
+            elif response["msg"]=="Token has expired":
+                print('Token expired!')
+                return redirect("../login")
+            elif response["msg"]=="Logged-out Successfully":
+                del request.session["access_token"]
+                del request.session["acno"]
+                print('Logged-out Successfully & session deleted!')
+                return redirect("../login")
+            else:
+                return print("Problem Problem 222 !!!!!!")
+        else:
+            return print("Problem Problem 333 !!!!!!")
+    else:
+        print('access_token missing login first!')
+        return redirect("../login")
+    
+    
 
 def acLogin(request):
     if request.method=="POST":
@@ -26,10 +51,10 @@ def acLogin(request):
         print(type(response), response)
         if "access_token" in response:
             request.session["access_token"]=response["access_token"]
-            request.session["username"]=response["username"]
-            return render(request,"cafeManagement/home.html", context={"response":response,"session":request.session["user"]})
+            request.session["acno"]=response["acno"]
+            return render(request,"cafeManagement/home.html", context={"response":response})
         else:
-            return render(request,"cafeManagement/login.html")
+            return redirect("../login")
     else:
         return render(request,"cafeManagement/login.html")
    
@@ -67,7 +92,11 @@ def acList(request):
     response=requests.get("http://127.0.0.1:5000/user").json()
     return render(request,"cafeManagement/list.html",{"response":response})
 
-
-def achome(request):
-    token=request.session["user"]
+def acHome(request):
     return render(request,"cafeManagement/home.html")
+
+def acCredit(request):
+    return render(request,"cafeManagement/credit.html")
+
+def acDebit(request):
+    return render(request,"cafeManagement/debit.html")
